@@ -7,7 +7,6 @@ name: PR Check - Custom source root
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GO111MODULE: auto
-  CODEQL_EXTRACTOR_JAVA_AGENT_DISABLE_KOTLIN: 'true'
 on:
   push:
     branches:
@@ -61,6 +60,7 @@ jobs:
         with:
           version: ${{ matrix.version }}
           use-all-platform-bundle: 'false'
+          setup-kotlin: 'true'
       - name: Move codeql-action
         shell: bash
         run: |
@@ -73,9 +73,7 @@ jobs:
           tools: ${{ steps.prepare-test.outputs.tools-url }}
       - uses: ./../action/analyze
         with:
-          upload-database: false
           skip-queries: true
-          upload: never
       - name: Assert database exists
         shell: bash
         run: |

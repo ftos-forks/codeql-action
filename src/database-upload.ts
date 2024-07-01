@@ -20,6 +20,11 @@ export async function uploadDatabases(
     return;
   }
 
+  if (util.isInTestMode()) {
+    logger.debug("In test mode. Skipping database upload.");
+    return;
+  }
+
   // Do nothing when not running against github.com
   if (
     config.gitHubVersion.type !== util.GitHubVariant.DOTCOM &&
@@ -83,7 +88,6 @@ export async function uploadDatabases(
         bundledDbReadStream.close();
       }
     } catch (e) {
-      console.log(e);
       // Log a warning but don't fail the workflow
       logger.warning(`Failed to upload database for ${language}: ${e}`);
     }

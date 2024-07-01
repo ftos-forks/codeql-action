@@ -45,10 +45,10 @@ export interface FeatureEnablement {
  * Legacy features should end with `_enabled`.
  */
 export enum Feature {
-  AutobuildDirectTracing = "autobuild_direct_tracing",
+  AutobuildDirectTracing = "autobuild_direct_tracing_v2",
   CleanupTrapCaches = "cleanup_trap_caches",
   CppDependencyInstallation = "cpp_dependency_installation_enabled",
-  CppTrapCachingEnabled = "cpp_trap_caching_enabled",
+  DisableCsharpBuildless = "disable_csharp_buildless",
   DisableJavaBuildlessEnabled = "disable_java_buildless_enabled",
   DisableKotlinAnalysisEnabled = "disable_kotlin_analysis_enabled",
   ExportDiagnosticsEnabled = "export_diagnostics_enabled",
@@ -103,11 +103,10 @@ export const featureConfig: Record<
     legacyApi: true,
     minimumVersion: "2.15.0",
   },
-  [Feature.CppTrapCachingEnabled]: {
+  [Feature.DisableCsharpBuildless]: {
     defaultValue: false,
-    envVar: "CODEQL_CPP_TRAP_CACHING",
-    legacyApi: true,
-    minimumVersion: "2.16.1",
+    envVar: "CODEQL_ACTION_DISABLE_CSHARP_BUILDLESS",
+    minimumVersion: undefined,
   },
   [Feature.DisableJavaBuildlessEnabled]: {
     defaultValue: false,
@@ -429,7 +428,9 @@ class GitHubFeatureFlags {
         this.logger.debug(
           `Loading feature flags from ${this.featureFlagsFile}`,
         );
-        return JSON.parse(fs.readFileSync(this.featureFlagsFile, "utf8"));
+        return JSON.parse(
+          fs.readFileSync(this.featureFlagsFile, "utf8"),
+        ) as GitHubFeatureFlagsApiResponse;
       }
     } catch (e) {
       this.logger.warning(

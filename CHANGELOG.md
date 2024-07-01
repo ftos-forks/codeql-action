@@ -6,6 +6,24 @@ Note that the only difference between `v2` and `v3` of the CodeQL Action is the 
 
 ## [UNRELEASED]
 
+No user facing changes.
+
+## 3.25.11 - 28 Jun 2024
+
+- Avoid failing the workflow run if there is an error while uploading debug artifacts. [#2349](https://github.com/github/codeql-action/pull/2349)
+- Update default CodeQL bundle version to 2.17.6. [#2352](https://github.com/github/codeql-action/pull/2352)
+
+## 3.25.10 - 13 Jun 2024
+
+- Update default CodeQL bundle version to 2.17.5. [#2327](https://github.com/github/codeql-action/pull/2327)
+
+## 3.25.9 - 12 Jun 2024
+
+- Avoid failing database creation if the database folder already exists and contains some unexpected files. Requires CodeQL 2.18.0 or higher. [#2330](https://github.com/github/codeql-action/pull/2330)
+- The init Action will attempt to clean up the database cluster directory before creating a new database and at the end of the job. This will help to avoid issues where the database cluster directory is left in an inconsistent state. [#2332](https://github.com/github/codeql-action/pull/2332)
+
+## 3.25.8 - 04 Jun 2024
+
 - Update default CodeQL bundle version to 2.17.4. [#2321](https://github.com/github/codeql-action/pull/2321)
 
 ## 3.25.7 - 31 May 2024
