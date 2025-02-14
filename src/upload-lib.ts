@@ -14,6 +14,7 @@ import * as api from "./api-client";
 import { getGitHubVersion, wrapApiConfigurationError } from "./api-client";
 import { CodeQL, getCodeQL } from "./codeql";
 import { getConfig } from "./config-utils";
+import { readDiffRangesJsonFile } from "./diff-filtering-utils";
 import { EnvVar } from "./environment";
 import { FeatureEnablement } from "./feature-flags";
 import * as fingerprints from "./fingerprints";
@@ -578,6 +579,7 @@ export async function uploadFiles(
     features,
     logger,
   );
+  sarif = filterAlertsByDiffRange(logger, sarif);
   sarif = await fingerprints.addFingerprints(sarif, checkoutPath, logger);
 
   const analysisKey = await api.getAnalysisKey();
@@ -847,4 +849,46 @@ export class InvalidSarifUploadError extends Error {
   constructor(message: string) {
     super(message);
   }
+}
+
+function filterAlertsByDiffRange(logger: Logger, sarif: SarifFile): SarifFile {
+  const diffRanges = readDiffRangesJsonFile(logger);
+  if (!diffRanges) {
+    return sarif;
+  }
+
+  const checkoutPath = actionsUtil.getRequiredInput("checkout_path");
+
+  for (const run of sarif.runs) {
+    if (run.results) {
+      run.results = run.results.filter((result) => {
+        const locations = [
+          ...(result.locations || []).map((loc) => loc.physicalLocation),
+          ...(result.relatedLocations || []).map((loc) => loc.physicalLocation),
+        ];
+
+        return locations.some((physicalLocation) => {
+          const locationUri = physicalLocation?.artifactLocation?.uri;
+          const locationStartLine = physicalLocation?.region?.startLine;
+          if (!locationUri || locationStartLine === undefined) {
+            return false;
+          }
+          // CodeQL always uses forward slashes as the path separator, so on Windows we
+          // need to replace any backslashes with forward slashes.
+          const locationPath = path
+            .join(checkoutPath, locationUri)
+            .replaceAll(path.sep, "/");
+          return diffRanges.some(
+            (range) =>
+              range.path === locationPath &&
+              ((range.startLine <= locationStartLine &&
+                range.endLine >= locationStartLine) ||
+                (range.startLine === 0 && range.endLine === 0)),
+          );
+        });
+      });
+    }
+  }
+
+  return sarif;
 }
