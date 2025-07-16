@@ -113,7 +113,7 @@ export const featureConfig: Record<
     minimumVersion: "2.15.0",
   },
   [Feature.DiffInformedQueries]: {
-    defaultValue: false,
+    defaultValue: true,
     envVar: "CODEQL_ACTION_DIFF_INFORMED_QUERIES",
     minimumVersion: "2.21.0",
   },
