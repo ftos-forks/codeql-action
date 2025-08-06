@@ -139,14 +139,27 @@ export enum CliConfigErrorCategory {
   PackMissingAuth = "PackMissingAuth",
   SwiftBuildFailed = "SwiftBuildFailed",
   UnsupportedBuildMode = "UnsupportedBuildMode",
+  UnsupportedPlatform = "UnsupportedPlatform",
 }
 
 type CliErrorConfiguration = {
-  /** One of these candidates, or the exit code, must be present in the error message. */
+  /** One of these candidates, or the exit code, must be present in the error message.
+   * If present, precondition as well must hold
+   */
   cliErrorMessageCandidates: RegExp[];
   exitCode?: number;
   additionalErrorMessageToAppend?: string;
+  precondition?: () => boolean;
 };
+
+function isUnsupportedPlatform(): boolean {
+  return ![
+    ["linux", "x64"],
+    ["win32", "x64"],
+    ["darwin", "arm64"],
+    ["darwin", "x64"],
+  ].some(([p, a]) => p === process.platform && a === process.arch);
+}
 
 /**
  * All of our caught CLI error messages that we handle specially: ie. if we
@@ -156,6 +169,13 @@ export const cliErrorsConfig: Record<
   CliConfigErrorCategory,
   CliErrorConfiguration
 > = {
+  // if running on an unsupported platform, use this blanket category for all errors
+  [CliConfigErrorCategory.UnsupportedPlatform]: {
+    cliErrorMessageCandidates: [new RegExp("")],
+    precondition: isUnsupportedPlatform,
+    additionalErrorMessageToAppend:
+      `This platform/arch combination (${process.platform}/${process.arch}) is not supported by the CodeQL CLI. See https://codeql.github.com/docs/codeql-overview/system-requirements`,
+  },
   [CliConfigErrorCategory.AutobuildError]: {
     cliErrorMessageCandidates: [
       new RegExp("We were unable to automatically build your code"),
@@ -298,6 +318,9 @@ export function getCliConfigCategoryIfExists(
   cliError: CliError,
 ): CliConfigErrorCategory | undefined {
   for (const [category, configuration] of Object.entries(cliErrorsConfig)) {
+    if (configuration.precondition && !configuration.precondition()) {
+      continue;
+    }
     if (
       cliError.exitCode !== undefined &&
       configuration.exitCode !== undefined &&
