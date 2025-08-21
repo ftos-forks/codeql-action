@@ -225,7 +225,7 @@ async function run() {
 
     config = await getConfig(actionsUtil.getTemporaryDirectory(), logger);
     if (config === undefined) {
-      throw new Error(
+      throw new util.ConfigurationError(
         "Config file could not be found at expected location. Has the 'init' action been called?",
       );
     }
@@ -249,7 +249,7 @@ async function run() {
       delete process.env.CODEQL_PROXY_CA_CERTIFICATE;
     }
 
-    if (actionsUtil.getOptionalInput("cleanup-level") !== "") {
+    if (actionsUtil.getOptionalInput("cleanup-level")) {
       logger.info(
         "The 'cleanup-level' input is ignored since the CodeQL Action now automatically " +
           "manages database cleanup. This input can safely be removed from your workflow.",
