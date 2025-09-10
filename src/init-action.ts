@@ -23,7 +23,10 @@ import {
 } from "./caching-utils";
 import { CodeQL } from "./codeql";
 import * as configUtils from "./config-utils";
-import { downloadDependencyCaches } from "./dependency-caching";
+import {
+  downloadDependencyCaches,
+  minimizeJavaDependencyJars,
+} from "./dependency-caching";
 import {
   addDiagnostic,
   flushDiagnostics,
@@ -547,7 +550,15 @@ async function run() {
 
     // Restore dependency cache(s), if they exist.
     if (shouldRestoreCache(config.dependencyCachingEnabled)) {
-      await downloadDependencyCaches(config.languages, logger);
+      const minimizeJavaJars = await features.getValue(
+        Feature.JavaMinimizeDependencyJars,
+        codeql,
+      );
+      await downloadDependencyCaches(
+        config.languages,
+        logger,
+        minimizeJavaJars,
+      );
     }
 
     // Suppress warnings about disabled Python library extraction.
@@ -595,6 +606,16 @@ async function run() {
         // so we need to suppress the new default CLI behavior.
         core.exportVariable("CODEQL_EXTRACTOR_PYTHON_EXTRACT_STDLIB", "true");
       }
+    }
+    if (process.env["CODEQL_EXTRACTOR_JAVA_OPTION_MINIMIZE_DEPENDENCY_JARS"]) {
+      logger.debug(
+        "CODEQL_EXTRACTOR_JAVA_OPTION_MINIMIZE_DEPENDENCY_JARS is already set, so the Action will not override it.",
+      );
+    } else if (await minimizeJavaDependencyJars(config, features, codeql)) {
+      core.exportVariable(
+        "CODEQL_EXTRACTOR_JAVA_OPTION_MINIMIZE_DEPENDENCY_JARS",
+        "true",
+      );
     }
 
     const { registriesAuthTokens, qlconfigFile } =
