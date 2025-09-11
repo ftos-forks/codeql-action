@@ -4,7 +4,7 @@ See the [releases page](https://github.com/github/codeql-action/releases) for th
 
 ## [UNRELEASED]
 
-No user facing changes.
+- We are rolling out a change in September 2025 that will reduce the size of Actions dependency caches for Java analyses. [#3107](https://github.com/github/codeql-action/pull/3107)
 
 ## 3.30.2 - 09 Sep 2025
 
