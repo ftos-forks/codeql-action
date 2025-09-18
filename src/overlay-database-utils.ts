@@ -350,11 +350,16 @@ export async function downloadOverlayBaseDatabaseFromCache(
   let databaseDownloadDurationMs = 0;
   try {
     const databaseDownloadStart = performance.now();
-    const foundKey = await waitForResultWithTimeLimit(
-      MAX_CACHE_OPERATION_MS,
-      actionsCache.restoreCache([dbLocation], cacheRestoreKeyPrefix),
-      () => {
-        logger.info("Timed out downloading overlay-base database from cache");
+    const foundKey = await actionsCache.restoreCache(
+      [dbLocation],
+      cacheRestoreKeyPrefix,
+      undefined,
+      {
+        // Azure SDK download (which is the default) uses 128MB segments.
+        // Setting segmentTimeoutInMs to 3000 translates to segment download
+        // speed of about 40 MB/s, which should be achievable unless the
+        // download is unreliable (in which case we do want to abort).
+        segmentTimeoutInMs: 3000,
       },
     );
     databaseDownloadDurationMs = Math.round(
