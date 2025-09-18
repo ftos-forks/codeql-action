@@ -1039,3 +1039,42 @@ function filterAlertsByDiffRange(logger: Logger, sarif: SarifFile): SarifFile {
 
   return sarif;
 }
+
+function addOptional(
+  a: number | undefined,
+  b: number | undefined,
+): number | undefined {
+  if (a === undefined && b === undefined) return undefined;
+  return (a ?? 0) + (b ?? 0);
+}
+
+/**
+ * Merges several (potentially undefined) `UploadStatusReport` values into one.
+ *
+ * @param reports The reports to merge.
+ * @returns A single `UploadStatusReport` containing the sums of all data from the individual reports.
+ */
+export function combineSarifUploadResults(
+  reports: Array<UploadStatusReport | undefined>,
+): UploadStatusReport {
+  const result: UploadStatusReport = {};
+
+  for (const report of reports) {
+    if (report !== undefined) {
+      result.num_results_in_sarif = addOptional(
+        result.num_results_in_sarif,
+        report.num_results_in_sarif,
+      );
+      result.raw_upload_size_bytes = addOptional(
+        result.raw_upload_size_bytes,
+        report.raw_upload_size_bytes,
+      );
+      result.zipped_upload_size_bytes = addOptional(
+        result.zipped_upload_size_bytes,
+        report.zipped_upload_size_bytes,
+      );
+    }
+  }
+
+  return result;
+}
