@@ -4,11 +4,8 @@ import * as path from "path";
 import * as core from "@actions/core";
 
 import * as actionsUtil from "./actions-util";
-import { getGitHubVersion } from "./api-client";
-import { Feature, FeatureEnablement, initFeatures } from "./feature-flags";
 import { KnownLanguage } from "./languages";
 import { getActionsLogger, Logger } from "./logging";
-import { getRepositoryNwo } from "./repository";
 import {
   credentialToStr,
   getCredentials,
@@ -32,7 +29,6 @@ async function run(startedAt: Date) {
   // possible, and only use safe functions outside.
 
   const logger = getActionsLogger();
-  let features: FeatureEnablement | undefined;
   let language: KnownLanguage | undefined;
 
   try {
@@ -43,16 +39,6 @@ async function run(startedAt: Date) {
     const tempDir = actionsUtil.getTemporaryDirectory();
     const proxyLogFilePath = path.resolve(tempDir, "proxy.log");
     core.saveState("proxy-log-file", proxyLogFilePath);
-
-    // Initialise FFs.
-    const repositoryNwo = getRepositoryNwo();
-    const gitHubVersion = await getGitHubVersion();
-    features = initFeatures(
-      gitHubVersion,
-      repositoryNwo,
-      actionsUtil.getTemporaryDirectory(),
-      logger,
-    );
 
     // Get the language input.
     const languageInput = actionsUtil.getOptionalInput("language");
